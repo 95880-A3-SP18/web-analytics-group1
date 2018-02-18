@@ -1,0 +1,64 @@
+import re
+import os
+import os.path
+import openpyxl
+import pandas
+from urllib.request import urlopen
+from bs4 import BeautifulSoup
+from xlrd import open_workbook
+
+def download_roster(url, stats_file_path):
+
+    #if os.path.exists(stats_file_path):
+        #ss = openpyxl.load_workbook(stats_file_path)
+    #else:
+        #ss = openpyxl.Workbook()
+
+        # if there is a sheet with this name already, keep it
+
+
+        # create sheet for new data
+
+    html = url
+    rank = requests.get(html)
+
+    soup = BeautifulSoup(rank.text, features = 'lxml')
+
+    table = soup.find("table", {'class': re.compile('.*?')})
+    print(table)
+
+    data = []
+    for row in table.find_all('tr', {'class': re.compile('.*?')}):
+        cells = row.findAll('td')
+        cellTexts = []
+        for col in cells:
+            cellTexts.append(col.get_text())
+        #sheet.append(cellTexts)
+        data.append(cellTexts)
+    return data
+
+def writer(stats_file_path,data):
+    with open(stats_file_path, 'w') as f:
+        writer = csv.writer(f, dialect='excel')
+        writer.writerows(data)
+        #csv_file.close
+
+def main(base_url, deep):
+
+    url_list = []
+    for i in range(0, deep):
+        url_list.append(base_url + '?page=' + str(i))
+
+    dir = 'downloads/stats'
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    stats_file_path = dir + "/ranks.csv"
+    for url in url_list:
+        data = download_roster(url,stats_file_path)
+        writer(stats_file_path, data)
+
+
+
+if __name__ == '__main__':
+    base = 'http://www.webometrics.info/en/North_america/United%20States%20of%20America'
+    main(base, 3)
