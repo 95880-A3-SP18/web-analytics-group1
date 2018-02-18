@@ -1,0 +1,40 @@
+def download_roster(stats_file_path):
+
+    if os.path.exists(stats_file_path):
+        ss = openpyxl.load_workbook(stats_file_path)
+    else:
+        ss = openpyxl.Workbook()
+
+        # if there is a sheet with this name already, remove it
+    sheet = ss.create_sheet('ranks')
+
+        # create sheet for new data
+
+    html = 'http://www.webometrics.info/en/North_america/United%20States%20of%20America'
+    rank = requests.get(html)
+
+    soup = BeautifulSoup(rank.text, features = 'lxml')
+
+    table = soup.find("table", {'class': re.compile('.*?')})
+    print(table)
+
+    for row in table.find_all('tr', {'class': re.compile('.*?')}):
+        cells = row.findAll('td')
+        cellTexts = []
+        for col in cells:
+            cellTexts.append(col.get_text())
+        sheet.append(cellTexts)
+
+
+
+    ss.save(stats_file_path)
+
+def main():
+    dir = 'downloads/stats'
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+    stats_file_path = dir + "/ranks.xlsx"
+    download_roster(stats_file_path)
+
+if __name__ == '__main__':
+    main()
